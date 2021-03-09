@@ -52,7 +52,7 @@ export default {
         // console.log(valid)
         if (valid) {
           // console.log('发起网络请求')
-          this.$http.post('login', this.loginForm).then((res) => {
+          this.$axios.post('login', this.loginForm).then((res) => {
             // console.log(res.data.meta)
             if (res.data.meta.status !== 200) {
               // console.log('登陆失败')
