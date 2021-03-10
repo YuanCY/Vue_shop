@@ -8,8 +8,8 @@
         <div class="userContent">
             <!-- ====================================搜索栏 + 新增用户按钮==================================== -->
             <el-row>
-                <el-input class="searchUser" placeholder="请输入内容">
-                    <el-button slot="append" icon="el-icon-search"></el-button>
+                <el-input class="searchUser" placeholder="请输入内容" v-model="searchInput" @change="searchUserInfo">
+                    <el-button slot="append" icon="el-icon-search" @click="searchUserInfo"></el-button>
                 </el-input>
                 <el-button type="primary" @click="addDialogVisible = true">新增用户</el-button>
             </el-row>
@@ -29,9 +29,11 @@
                     </el-table-column>
                     <el-table-column label="操作" width="180px">
                         <!-- =====================修改信息 + 删除用户 + 设置权限===================== -->
-                        <el-button type="primary" size="mini" class="el-icon-edit"></el-button>
-                        <el-button type="warning" size="mini" class="el-icon-setting"></el-button>
-                        <el-button type="danger" size="mini" class="el-icon-delete"></el-button>
+                        <template v-slot:default="userData">
+                            <el-button type="primary" size="mini" class="el-icon-edit" @click="getUserInfo(userData.row)"></el-button>
+                            <el-button type="warning" size="mini" class="el-icon-setting"></el-button>
+                            <el-button type="danger" size="mini" class="el-icon-delete"></el-button>
+                        </template>
                         <!-- =====================修改信息 + 删除用户 + 设置权限===================== -->
                     </el-table-column>
                 </el-table>
@@ -56,28 +58,50 @@
             :visible.sync="addDialogVisible"
             width="50%">
             <!-- ===============新增用户表格=============== -->
-            <el-form :model="addUserDetail" :rules="rules" ref="addUserDetail" label-width="100px">
-                <el-form-item label="用户名" prop="username">
-                    <el-input v-model="addUserDetail.username"></el-input>
-                </el-form-item>
-                <el-form-item label="密码" prop="password">
-                    <el-input v-model="addUserDetail.password"></el-input>
-                </el-form-item>
-                <el-form-item label="邮箱" prop="email">
-                    <el-input v-model="addUserDetail.email"></el-input>
-                </el-form-item>
-                <el-form-item label="手机号" prop="mobile">
-                    <el-input v-model="addUserDetail.mobile"></el-input>
-                </el-form-item>
-            </el-form>
-            <!-- ===============新增用户表格=============== -->
-            <span slot="footer" class="dialog-footer">
-                <el-button @click="addUserDilogClose">取 消</el-button>
-                <el-button type="primary" @click="addUserInfo">确 定</el-button>
-            </span>
+                <el-form :model="addUserDetail" :rules="rules" ref="addUserDetail" label-width="100px">
+                    <el-form-item label="用户名" prop="username">
+                        <el-input v-model="addUserDetail.username"></el-input>
+                    </el-form-item>
+                    <el-form-item label="密码" prop="password">
+                        <el-input v-model="addUserDetail.password"></el-input>
+                    </el-form-item>
+                    <el-form-item label="邮箱" prop="email">
+                        <el-input v-model="addUserDetail.email"></el-input>
+                    </el-form-item>
+                    <el-form-item label="手机号" prop="mobile">
+                        <el-input v-model="addUserDetail.mobile"></el-input>
+                    </el-form-item>
+                </el-form>
+                <!-- ===============新增用户表格=============== -->
+                <span slot="footer" class="dialog-footer">
+                    <el-button @click="addUserDilogClose">取 消</el-button>
+                    <el-button type="primary" @click="addUserInfo">确 定</el-button>
+                </span>
             </el-dialog>
             <!-- ========================================新增用户窗口======================================== -->
             <!-- ========================================修改用户窗口======================================== -->
+            <el-dialog
+            title="修改用户数据"
+            :visible.sync="editDialogVisible"
+            width="50%">
+                <!-- ===============修改用户表格=============== -->
+                <el-form :model="editUserDetail" :rules="rules" ref="editUserDetail" label-width="100px">
+                    <el-form-item label="用户名" prop="username">
+                        <el-input disabled v-model="editUserDetail.username"></el-input>
+                    </el-form-item>
+                    <el-form-item label="邮箱" prop="email">
+                        <el-input v-model="editUserDetail.email"></el-input>
+                    </el-form-item>
+                    <el-form-item label="手机号" prop="mobile">
+                        <el-input v-model="editUserDetail.mobile"></el-input>
+                    </el-form-item>
+                </el-form>
+                <!-- ===============修改用户表格=============== -->
+                <span slot="footer" class="dialog-footer">
+                    <el-button @click="editDialogVisible = false">取 消</el-button>
+                    <el-button type="primary" @click="editUserInfo">确 定</el-button>
+                </span>
+            </el-dialog>
             <!-- ========================================修改用户窗口======================================== -->
         </div>
     </div>
@@ -89,6 +113,7 @@ export default {
     return {
       // 查询用户数据组====================================
       // 用于存放从后端获取的用户list
+      searchInput: '',
       usersList: [],
       // 用于向后台搜索用户列表时传递的参数
       getUsersConfig: {
@@ -101,12 +126,20 @@ export default {
       // 新增用户数据组====================================
       // 新增用户窗口是否显示
       addDialogVisible: false,
+      // 修改用户窗口是否显示
+      editDialogVisible: false,
       // 新增页面数据
       addUserDetail: {
-        username: '憨憨',
+        username: '憨憨1',
         password: '123321',
-        email: '1233@qq.com',
-        mobile: '13333336666'
+        email: '123@123.com',
+        mobile: '13434343344'
+      },
+      // 修改用户数据
+      editUserDetail: {
+        id: 0,
+        email: '',
+        mobile: ''
       },
       // 新增数据校验规则
       rules: {
@@ -188,26 +221,67 @@ export default {
             if (res.data.meta.status === 201) {
               this.$message.success(res.data.meta.msg)
               this.getUserList()
+              this.addUserDilogClose() // 关闭窗口，并将窗口内容进行reset
             } else {
               this.$message.error(res.data.meta.msg)
             }
           })
+        } else {
+          this.$message.error('请按照提示填写！')
         }
       })
-      this.addUserDilogClose() // 关闭窗口，并将窗口内容进行reset
     },
     /**
      * 删：删除用户=========================================================================
      */
     deleteUserInfo() {},
     /**
-     * 改：修改用户信息======================================================================
+     * 改1：获取用户信息======================================================================
      */
-    editUserInfo() {},
+    getUserInfo(item) {
+      // 先获取到该行的id，然后根据id查到信息
+      this.$axios.get('users/' + item.id).then(res => {
+        if (res.data.meta.status === 200) {
+          this.editUserDetail = res.data.data
+          this.editDialogVisible = true
+          // 打开了页面，需要修改用户内容
+        }
+      }).catch(err => {
+        console.log(err)
+      })
+    },
+    /**
+     * 改2:获取完用户信息后，修改用户信息。
+     */
+    editUserInfo() {
+      // 先要验证表格正确，才能做操作
+      this.$refs.editUserDetail.validate(val => {
+        if (val) {
+          this.editDialogVisible = false
+          this.$axios.put('users/' + this.editUserDetail.id, this.editUserDetail).then(res => {
+            // console.log(res)
+            if (res.data.meta.status === 200) {
+              this.getUserList() // 更新列表
+              this.$message.success(res.data.meta.msg)
+            } else {
+              this.$message.error(res.data.meta.msg)
+            }
+          }).catch(err => {
+            console.log(err)
+          })
+        } else {
+          this.$message.error('请按照说明填写！')
+        }
+      })
+    },
     /**
      * 查：查询用户信息======================================================================
      */
-    searchUserInfo() {},
+    searchUserInfo() {
+      this.getUsersConfig.query = this.searchInput
+      this.getUserList()
+      this.getUsersConfig.query = '' // 查询完毕后一定要将query设置为空
+    },
     /**
      * 当新建窗口关闭的时候，调用此函数。只有用户手动点击“取消”时，数据被清空
      */
