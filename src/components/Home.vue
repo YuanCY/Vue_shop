@@ -69,7 +69,7 @@ export default {
       this.$axios.get('menus').then(res => {
         if (res.data.meta.status === 200) {
           this.asideList = res.data.data
-          console.log(this.asideList)
+          // console.log(this.asideList)
         }
       }).catch(err => {
         console.log(err)
