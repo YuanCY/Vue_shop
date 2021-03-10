@@ -32,6 +32,17 @@
                 </template>
             </el-row>
             <!-- ==========================================用户栏=========================================== -->
+            <!-- ==========================================分页栏=========================================== -->
+            <el-pagination
+            @size-change="pageSizeChange"
+            @current-change="pageCurrentChange"
+            :current-page="getUsersConfig.pagenum"
+            :page-sizes="[5, 10]"
+            :page-size="getUsersConfig.pagesize"
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="total">
+            </el-pagination>
+            <!-- ==========================================分页栏=========================================== -->
         </div>
     </div>
 </template>
@@ -57,7 +68,7 @@ export default {
   },
   methods: {
     /**
-     * 通过后台提供api接口，获取用户列表。
+     * 通过后台提供api接口，获取用户列表。===========================================
      */
     getUserList() {
       this.$axios.get('users', { params: this.getUsersConfig }).then(res => {
@@ -71,7 +82,7 @@ export default {
       })
     },
     /**
-     * 用户状态switch开关，点击切换状态功能。
+     * 用户状态switch开关，点击切换状态功能。===========================================
      */
     changeUserState(userData) {
     //   console.log(userData.mg_state)
@@ -85,6 +96,20 @@ export default {
       }).catch(error => {
         console.log(error)
       })
+    },
+    /**
+     * 当页面下方页码栏的一页显示数量发生变化时，需要改变getUsersConfig里面的参数，并刷新页码
+     */
+    pageSizeChange(val) {
+      this.getUsersConfig.pagesize = val
+      this.getUserList()
+    },
+    /**
+     * 当页面下方页码栏页数发生改变时，需要改变里面的参数，并刷新页面
+     */
+    pageCurrentChange(val) {
+      this.getUsersConfig.pagenum = val
+      this.getUserList()
     }
   }
 }
@@ -104,5 +129,7 @@ export default {
     margin-right: 20px;
     margin-bottom: 20px;
 }
-
+.el-pagination{
+    margin-top: 20px;
+}
 </style>
