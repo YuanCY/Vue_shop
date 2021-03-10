@@ -26,7 +26,11 @@
           </el-row>
           <!-- ==============================================侧边栏end============================================== -->
         </el-aside>
-        <el-main>Main</el-main>
+        <el-main>
+          <!-- ==============================================main start============================================== -->
+          <router-view></router-view>
+          <!-- ==============================================main end================================================ -->
+        </el-main>
       </el-container>
     </el-container>
   </div>
@@ -65,7 +69,7 @@ export default {
       this.$axios.get('menus').then(res => {
         if (res.data.meta.status === 200) {
           this.asideList = res.data.data
-          console.log(this.asideList)
+          // console.log(this.asideList)
         }
       }).catch(err => {
         console.log(err)
