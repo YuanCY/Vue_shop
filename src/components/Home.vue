@@ -9,14 +9,14 @@
         <el-aside width="200px">
           <!-- ==============================================侧边栏start============================================== -->
           <el-row class="tac">
-            <el-col :span="12" v-for="item in asideList" :key="item.id">
-              <el-menu>
-                <el-submenu index="item.id">
+            <el-col :span="12">
+              <el-menu unique-opened>
+                <el-submenu :index="item.id.toString()" v-for="item in asideList" :key="item.id">
                   <template slot="title">
                     <i :class="asideListIcon[item.id]"></i>
                     <span>{{ item.authName }}</span>
                   </template>
-                    <el-menu-item index="subItem.id" v-for="subItem in item.children" :key="subItem.id">
+                    <el-menu-item :index="subItem.id.toString()" v-for="subItem in item.children" :key="subItem.id">
                       <i class="el-icon-menu"></i>
                       {{ subItem.authName }}
                     </el-menu-item>
