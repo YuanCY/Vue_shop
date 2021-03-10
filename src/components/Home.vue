@@ -10,13 +10,13 @@
           <!-- ==============================================侧边栏start============================================== -->
           <el-row class="tac">
             <el-col :span="12">
-              <el-menu unique-opened>
-                <el-submenu :index="item.id.toString()" v-for="item in asideList" :key="item.id">
+              <el-menu unique-opened router>
+                <el-submenu :index="item.path.toString()" v-for="item in asideList" :key="item.id">
                   <template slot="title">
                     <i :class="asideListIcon[item.id]"></i>
                     <span>{{ item.authName }}</span>
                   </template>
-                    <el-menu-item :index="subItem.id.toString()" v-for="subItem in item.children" :key="subItem.id">
+                    <el-menu-item :index="subItem.path.toString()" v-for="subItem in item.children" :key="subItem.id">
                       <i class="el-icon-menu"></i>
                       {{ subItem.authName }}
                     </el-menu-item>
@@ -69,7 +69,7 @@ export default {
       this.$axios.get('menus').then(res => {
         if (res.data.meta.status === 200) {
           this.asideList = res.data.data
-          // console.log(this.asideList)
+          console.log(this.asideList)
         }
       }).catch(err => {
         console.log(err)
