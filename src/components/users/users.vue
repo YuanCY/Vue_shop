@@ -31,8 +31,10 @@
                         <!-- =====================修改信息 + 删除用户 + 设置权限===================== -->
                         <template v-slot:default="userData">
                             <el-button type="primary" size="mini" class="el-icon-edit" @click="getUserInfo(userData.row)"></el-button>
-                            <el-button type="warning" size="mini" class="el-icon-setting"></el-button>
-                            <el-button type="danger" size="mini" class="el-icon-delete"></el-button>
+                            <el-tooltip class="item" effect="dark" content="配置权限" placement="top" enterable>
+                              <el-button type="warning" size="mini" class="el-icon-setting"></el-button>
+                            </el-tooltip>
+                            <el-button type="danger" size="mini" class="el-icon-delete" @click="deleteUserInfo(userData.row)"></el-button>
                         </template>
                         <!-- =====================修改信息 + 删除用户 + 设置权限===================== -->
                     </el-table-column>
@@ -128,6 +130,8 @@ export default {
       addDialogVisible: false,
       // 修改用户窗口是否显示
       editDialogVisible: false,
+      // 删除按钮多次确认窗口是否显示
+      deleteVisible: false,
       // 新增页面数据
       addUserDetail: {
         username: '憨憨1',
@@ -234,7 +238,21 @@ export default {
     /**
      * 删：删除用户=========================================================================
      */
-    deleteUserInfo() {},
+    deleteUserInfo(item) {
+    //   console.log(item.id)
+      this.$axios.delete('users/' + item.id).then(res => {
+        // console.log(res)
+        if (res.data.meta.status === 200) {
+          this.deleteVisible = false
+          this.$message.success(res.data.meta.msg)
+          this.getUserList()
+        } else {
+          this.$message.error(res.data.meta.msg)
+        }
+      }).catch(err => {
+        console.log(err)
+      })
+    },
     /**
      * 改1：获取用户信息======================================================================
      */
