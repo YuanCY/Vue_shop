@@ -156,11 +156,11 @@ export default {
           { min: 6, max: 15, message: '长度在 6 到 15 个字符', trigger: 'blur' }
         ],
         email: [
-          { required: true, message: '请输入密码', trigger: 'blur' },
+          { required: true, message: '请输入邮箱地址', trigger: 'blur' },
           { type: 'email', message: '请输入正确的邮箱地址', trigger: ['blur', 'change'] }
         ],
         mobile: [
-          { required: true, message: '请输入密码', trigger: 'blur' },
+          { required: true, message: '请输入手机地址', trigger: 'blur' },
           { pattern: /^1[35789]\d{9}$/, message: '请输入正确的手机号', trigger: ['blur', 'change'] }
         ]
       }
