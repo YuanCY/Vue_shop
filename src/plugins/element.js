@@ -23,7 +23,8 @@ import {
   Pagination,
   Dialog,
   Tooltip,
-  Popover
+  Popover,
+  Tag
 } from 'element-ui'
 
 Vue.use(Button)
@@ -49,4 +50,5 @@ Vue.use(Pagination)
 Vue.use(Dialog)
 Vue.use(Tooltip)
 Vue.use(Popover)
+Vue.use(Tag)
 Vue.prototype.$message = Message

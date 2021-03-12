@@ -18,6 +18,7 @@
             <el-row>
                 <template>
                 <el-table :data="usersList" border style="width: 100%">
+                    <el-table-column type="index" label="序号"></el-table-column>
                     <el-table-column prop="username" label="用户名"></el-table-column>
                     <el-table-column prop="mobile" label="手机"></el-table-column>
                     <el-table-column prop="email" label="邮箱"></el-table-column>
@@ -312,14 +313,6 @@ export default {
 </script>
 
 <style scoped>
-.el-breadcrumb{
-    margin-bottom: 15px;
-}
-.userContent{
-    background-color: #fff;
-    border-radius: 5px;
-    padding: 20px;
-}
 .searchUser{
     width: 300px;
     margin-right: 20px;

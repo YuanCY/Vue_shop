@@ -10,3 +10,11 @@ body,
 .el-container{
     height: 100%;
 }
+.userContent{
+    background-color: #fff;
+    border-radius: 5px;
+    padding: 20px;
+}
+.el-breadcrumb{
+    margin-bottom: 15px;
+}
