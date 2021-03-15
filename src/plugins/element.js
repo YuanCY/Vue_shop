@@ -24,7 +24,9 @@ import {
   Dialog,
   Tooltip,
   Popover,
-  Tag
+  Tag,
+  Tree,
+  MessageBox
 } from 'element-ui'
 
 Vue.use(Button)
@@ -51,4 +53,6 @@ Vue.use(Dialog)
 Vue.use(Tooltip)
 Vue.use(Popover)
 Vue.use(Tag)
+Vue.use(Tree)
 Vue.prototype.$message = Message
+Vue.prototype.$confirm = MessageBox.confirm
