@@ -33,7 +33,7 @@
                         <template v-slot:default="userData">
                             <el-button type="primary" size="mini" class="el-icon-edit" @click="getUserInfo(userData.row)"></el-button>
                             <el-tooltip class="item" effect="dark" content="配置权限" placement="top" enterable>
-                              <el-button type="warning" size="mini" class="el-icon-setting"></el-button>
+                              <el-button type="warning" size="mini" class="el-icon-setting" @click="changeUserRoles(userData.row)"></el-button>
                             </el-tooltip>
                             <el-button type="danger" size="mini" class="el-icon-delete" @click="deleteUserInfo(userData.row)"></el-button>
                         </template>
@@ -106,6 +106,39 @@
                 </span>
             </el-dialog>
             <!-- ========================================修改用户窗口======================================== -->
+            <!-- ========================================改用户角色窗口======================================== -->
+            <el-dialog
+            title="分配权限"
+            :before-close="changeDilogClose"
+            :visible.sync="changeDialogVisible"
+            width="50%">
+                <!-- ===============修改用户表格=============== -->
+                <el-form :model="changeUserDetail" :rules="rules" ref="changeUserDetail" label-width="120px">
+                    <el-form-item label="当前的用户：">
+                        {{ changeUserDetail.username }}
+                    </el-form-item>
+                    <el-form-item label="当前的角色：">
+                        {{ changeUserDetail.role_name }}
+                    </el-form-item>
+                    <el-form-item label="分配的角色：">
+                        <!--  -->
+                          <el-select v-model="userSelect" placeholder="请选择">
+                              <el-option
+                                v-for="item in userRoles"
+                                :key="item.id"
+                                :label="item.roleName"
+                                :value="item.id">
+                              </el-option>
+                            </el-select>
+                    </el-form-item>
+                </el-form>
+                <!-- ===============修改用户表格=============== -->
+                <span slot="footer" class="dialog-footer">
+                    <el-button @click="changeDialogVisible = false">取 消</el-button>
+                    <el-button type="primary" @click="changeRoles">确 定</el-button>
+                </span>
+            </el-dialog>
+            <!-- ========================================改用户角色窗口======================================== -->
         </div>
     </div>
 </template>
@@ -131,6 +164,8 @@ export default {
       addDialogVisible: false,
       // 修改用户窗口是否显示
       editDialogVisible: false,
+      // 修改用户角色
+      changeDialogVisible: false,
       // 删除按钮多次确认窗口是否显示
       deleteVisible: false,
       // 新增页面数据
@@ -146,6 +181,13 @@ export default {
         email: '',
         mobile: ''
       },
+      // 修改用户信息
+      changeUserDetail: {
+      },
+      // 用户选择的角色权限
+      userSelect: '',
+      // 修改用户权限列表
+      userRoles: [],
       // 新增数据校验规则
       rules: {
         username: [
@@ -302,11 +344,54 @@ export default {
       this.getUsersConfig.query = '' // 查询完毕后一定要将query设置为空
     },
     /**
-     * 当新建窗口关闭的时候，调用此函数。只有用户手动点击“取消”时，数据被清空
+     * 当新建窗口关闭的时候，调用此函数。只有用户手动点击“取消”时，数据被清空===================================
      */
     addUserDilogClose() {
       this.addDialogVisible = false
       this.$refs.addUserDetail.resetFields()
+    },
+    /**
+     * 分配用户角色，先查询到用户当前信息，展示在页面弹窗上，然后在将用户角色分配好后上传
+     */
+    changeUserRoles(item) {
+      // console.log(item)
+      this.changeUserDetail = item
+      console.log('用户所选' + this.userSelect)
+      this.$axios.get('roles').then(res => {
+        if (res.data.meta.status === 200) {
+          console.log('获取用户信息')
+          console.log(res.data.data)
+          this.userRoles = res.data.data // 将后台返回数据，存在userRoles中
+          this.changeDialogVisible = true
+        }
+      }).catch(err => {
+        console.log(err)
+      })
+    },
+    /**
+     * 当用户关闭选择用户接口
+     */
+    changeDilogClose() {
+      this.changeDialogVisible = false
+      this.changeUserDetail = {}
+      this.userSelect = ''
+      this.userRoles = []
+      console.log('清空')
+    },
+    /**
+     * 用户点击修改用户角色的确定按钮后，将值传送至服务器
+     */
+    changeRoles() {
+      this.$axios.put(`users/${this.changeUserDetail.id}/role`, { id: this.changeUserDetail.id, rid: this.userSelect }).then(res => {
+        console.log(res.data.data)
+        if (res.data.meta.status === 200) {
+          this.$message.success(res.data.meta.msg)
+          this.changeDialogVisible = false
+        }
+        this.changeDilogClose()
+      }).catch(err => {
+        console.log(err)
+      })
     }
   }
 }
