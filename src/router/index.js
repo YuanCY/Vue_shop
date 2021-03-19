@@ -8,6 +8,7 @@ import Roles from '../components/roles/Roles.vue'
 import Rights from '../components/rights/Rights.vue'
 import FormTest from '../components/FormTest'
 import Categories from '../components/categories/Categories.vue'
+import Params from '../components/params/Params.vue'
 
 Vue.use(VueRouter)
 
@@ -32,7 +33,8 @@ const routes = [
       { path: '/roles', name: 'roles', component: Roles },
       { path: '/rights', name: 'rights', component: Rights },
       { path: '/test', name: 'test', component: FormTest },
-      { path: '/categories', name: 'categories', component: Categories }
+      { path: '/categories', name: 'categories', component: Categories },
+      { path: '/params', name: 'params', component: Params }
     ]
   }
 
