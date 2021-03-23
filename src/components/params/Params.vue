@@ -11,18 +11,33 @@
                 <span>选择商品分类：</span><el-cascader v-model="cascaderValues" :options="goodsForm" :props='cascaderProps' @change="getGoodId"></el-cascader>
             </el-row>
             <el-row>
-                <el-tabs type="border-card">
-                    <el-tab-pane label="动态参数">
+                <el-tabs type="border-card" v-model="activeName" @tab-click="tabsClick">
+                    <el-tab-pane label="动态参数" name="many">
                     <!-- ====================动态参数设置==================== -->
                     <el-button type="primary" size="small" :disabled="btnDisabled">添加参数</el-button>
                     <!-- ==========表格========== -->
                     <el-table :data="activeAttrForm" border style="width: 100%">
-                        <el-table-column type="expand" v-slot="props">
+                        <el-table-column type="expand"  v-slot="item">
                             <el-form label-position="left" inline>
                                 <el-form-item>
-                                    <el-tag :key="index" v-for="(tag, index) in (props.row.attr_vals.split(','))" v-show="props.row.attr_vals" closable :disable-transitions="false" @close="closeTag(props.row,index)">{{tag}}</el-tag>
-                                    <el-input class="input-new-tag" v-if="tagInputVisible" v-model="inputTagValue" ref="saveTagInput" size="small" @keyup.enter.native="(tagInputConfirm(props.row))" @blur="tagInputConfirm(props.row)" ></el-input>
-                                    <el-button v-else class="button-new-tag" size="small" @click="showInput">+ New Tag</el-button>
+                                    <el-tag
+                                    :key="index"
+                                    v-for="(tag,index) in item.row.attr_vals"
+                                    closable
+                                    :disable-transitions="false"
+                                    @close="deleteTag(tag, item.row)">
+                                    {{tag}}
+                                    </el-tag>
+                                    <el-input
+                                    class="input-new-tag"
+                                    v-if="item.row.inputTagVisible"
+                                    v-model="item.row.inputValue"
+                                    ref="saveTagInput"
+                                    size="small"
+                                    @keyup.enter.native="addTag(item.row)"
+                                    @blur="addTag(item.row)"
+                                    ></el-input>
+                                    <el-button v-else class="button-new-tag" size="small" @click="showInput(item.row)">+ New Tag</el-button>
                                 </el-form-item>
                             </el-form>
                         </el-table-column>
@@ -33,7 +48,22 @@
                     <!-- ==========表格========== -->
                     <!-- ====================动态参数设置==================== -->
                     </el-tab-pane>
-                    <el-tab-pane label="静态属性">静态属性</el-tab-pane>
+                    <el-tab-pane label="静态属性" name="only">
+                        <!-- ====================静态属性设置==================== -->
+                        <el-button type="primary" size="small" :disabled="btnDisabled">添加属性</el-button>
+                        <!-- ==========表格========== -->
+                        <el-table :data="staticAttrForm" border style="width: 100%">
+                            <el-table-column type="expand">
+                                <el-form label-position="left" inline>
+                                </el-form>
+                            </el-table-column>
+                            <el-table-column type="index" label="#"></el-table-column>
+                            <el-table-column prop="attr_name" label="参数名称"></el-table-column>
+                            <el-table-column label="操作"></el-table-column>
+                        </el-table>
+                        <!-- ==========表格========== -->
+                        <!-- ====================静态属性设置==================== -->
+                    </el-tab-pane>
                 </el-tabs>
             </el-row>
         </div>
@@ -63,10 +93,8 @@ export default {
       btnDisabled: true,
       // 动态数据
       activeAttrForm: [],
-      // taginput是否显示
-      tagInputVisible: false,
-      // 输入tag的内容
-      inputTagValue: ''
+      staticAttrForm: [],
+      activeName: 'many'
     }
   },
   created() {
@@ -99,7 +127,7 @@ export default {
         // 校验通过后
         // console.log(this.cascaderValue) // id
         this.btnDisabled = false // 校验完成后，该按钮应当允许按下
-        this.getGoodInfo(this.cascaderValue, 'many')
+        this.getGoodInfo(this.cascaderValue, this.activeName)
       } else {
         this.cascaderValue = ''
         this.cascaderValues = []
@@ -107,17 +135,35 @@ export default {
       }
     },
     /**
-     * 通过id获取该商品种类的具体静态数据，基本属性等，放到上方集联选择器中
+     * 通过id获取该商品种类的具体静态/动态数据，基本属性等，放到上方集联选择器中，sel参数传入many动态数据，only静态数据
      */
     getGoodInfo(id, sel) {
       this.$axios.get(`categories/${id}/attributes`, { params: { sel: sel } }).then(res => {
         if (res.data.meta.status === 200) {
-          console.log(res.data.data)
-          this.activeAttrForm = res.data.data // 将返回动态数据储存到动态参数表格中
+          res.data.data.forEach(item => {
+            if (item.attr_vals === '') {
+              item.attr_vals = []
+            } else {
+              item.attr_vals = item.attr_vals.split(',')
+            }
+            item.inputTagVisible = false
+            item.inputValue = ''
+          })
+          if (sel === 'many') {
+            this.activeAttrForm = res.data.data // 将返回动态数据储存到动态参数表格中
+          } else if (sel === 'only') {
+            this.staticAttrForm = res.data.data // 将返回静态数据，储存到动态参数表格中
+          }
         }
       }).catch(err => {
         console.log(err)
       })
+    },
+    /**
+     * 点击tab栏，切换获取数据
+     */
+    tabsClick(tab) {
+      this.getGoodInfo(this.cascaderValue, tab.name)
     },
     /**
      * 添加动态属性
@@ -127,21 +173,29 @@ export default {
      */
     // ===========================tag相关===========================
     /**
-     * 删除tag
+     * 获取tag，并将tag由字符串转换为数组
      */
-    closeTag(item, index) {
-      console.log(item.attr_vals)
-      const valsArr = item.attr_vals.split(',')
-      console.log(valsArr)
-      valsArr.splice(index, 1) // 删除了数据的数组
-      console.log(valsArr)
-      item.attr_vals = valsArr.join(',')
-      console.log(item.attr_vals)
-      this.$axios.put(`categories/${item.cat_id}/attributes/${item.attr_id}`, item).then(res => {
-        // console.log(res)
+    addTag(item) {
+      if (item.inputValue) {
+        item.attr_vals.push(item.inputValue)
+        // 需要将参数传送上去
+        this.saveAttr(item)
+      }
+      item.inputTagVisible = false
+      item.inputValue = ''
+    },
+    /**
+     * 储存并发送网络请求
+     */
+    saveAttr(item) {
+      const attrVals = item.attr_vals.join(',')
+      this.$axios.put(`categories/${this.cascaderValue}/attributes/${item.attr_id}`, {
+        attr_name: item.attr_name,
+        attr_sel: item.attr_sel,
+        attr_vals: attrVals
+      }).then(res => {
         if (res.data.meta.status === 200) {
           this.$message.success(res.data.meta.msg)
-        //   console.log(res.data.data)
         } else {
           this.$message.error(res.data.meta.msg)
         }
@@ -150,35 +204,20 @@ export default {
       })
     },
     /**
-     * 新增tag
+     * 删除tag
      */
-    tagInputConfirm(item) {
-      const inputTagValue = this.inputTagValue
-      if (inputTagValue) {
-        if (item.attr_vals === '') {
-          item.attr_vals = inputTagValue
-        } else {
-          item.attr_vals += ',' + inputTagValue
-        }
-        this.$axios.put(`categories/${item.cat_id}/attributes/${item.attr_id}`, item).then(res => {
-          if (res.data.meta.status === 200) {
-            this.$message.success(res.data.meta.msg)
-            // console.log(res.data.data)
-          } else {
-            this.$message.error(res.data.meta.msg)
-          }
-        }).catch(err => {
-          console.log(err)
-        })
-      }
-      this.tagInputVisible = false
-      this.inputTagValue = ''
+    deleteTag(tag, item) {
+      console.log(item)
+      item.attr_vals.splice(item.attr_vals.indexOf(tag), 1)
+      this.saveAttr(item)
     },
-    showInput() {
-      this.tagInputVisible = true
+    /**
+     * 使得输入tag变为input框
+     */
+    showInput(item) {
+      item.inputTagVisible = true
       this.$nextTick(_ => {
         this.$refs.saveTagInput.$refs.input.focus()
-        // console.log(this)
       })
     }
     // ===========================tag相关===========================

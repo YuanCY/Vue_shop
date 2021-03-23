@@ -6,9 +6,9 @@ import Welcome from '../components/Welcome.vue'
 import Users from '../components/users/Users.vue'
 import Roles from '../components/roles/Roles.vue'
 import Rights from '../components/rights/Rights.vue'
-import FormTest from '../components/FormTest'
 import Categories from '../components/categories/Categories.vue'
 import Params from '../components/params/Params.vue'
+import Test from '../components/test/Test.vue'
 
 Vue.use(VueRouter)
 
@@ -32,9 +32,9 @@ const routes = [
       { path: '/users', name: 'users', component: Users },
       { path: '/roles', name: 'roles', component: Roles },
       { path: '/rights', name: 'rights', component: Rights },
-      { path: '/test', name: 'test', component: FormTest },
       { path: '/categories', name: 'categories', component: Categories },
-      { path: '/params', name: 'params', component: Params }
+      { path: '/params', name: 'params', component: Params },
+      { path: '/test', name: 'test', component: Test }
     ]
   }
 
