@@ -11,10 +11,10 @@
                 <span>选择商品分类：</span><el-cascader v-model="cascaderValues" :options="goodsForm" :props='cascaderProps' @change="getGoodId"></el-cascader>
             </el-row>
             <el-row>
-                <el-tabs type="border-card" v-model="activeName" @tab-click="tabsClick">
+                <el-tabs type="border-card" v-model="activeForm.attr_sel" @tab-click="tabsClick">
                     <el-tab-pane label="动态参数" name="many">
                     <!-- ====================动态参数设置==================== -->
-                    <el-button type="primary" size="small" :disabled="btnDisabled">添加参数</el-button>
+                    <el-button type="primary" size="small" :disabled="btnDisabled" @click="openActiveDialog = true">添加参数</el-button>
                     <!-- ==========表格========== -->
                     <el-table :data="activeAttrForm" border style="width: 100%">
                         <el-table-column type="expand"  v-slot="item">
@@ -65,6 +65,25 @@
                         <!-- ====================静态属性设置==================== -->
                     </el-tab-pane>
                 </el-tabs>
+                <!-- ============================添加动态参数dialog============================ -->
+                <el-dialog
+                  title="添加动态参数"
+                  :visible.sync="openActiveDialog"
+                  width="50%"
+                  :before-close="closeActiveDialog">
+                  <!-- ====== -->
+                  <el-form :model="activeForm" :rules="rules" ref="activeRuleForm" label-width="100px" class="demo-ruleForm">
+                    <el-form-item label="动态参数" prop="attr_name">
+                      <el-input v-model="activeForm.attr_name"></el-input>
+                    </el-form-item>
+                  </el-form>
+                  <!-- ====== -->
+                  <span slot="footer" class="dialog-footer">
+                    <el-button @click="closeActiveDialog">取 消</el-button>
+                    <el-button type="primary" @click="addActiveAttr">确 定</el-button>
+                  </span>
+                </el-dialog>
+                <!-- ============================添加动态参数dialog============================ -->
             </el-row>
         </div>
     </div>
@@ -82,7 +101,7 @@ export default {
       goodsForm: [],
       // 选择的商品分类
       cascaderValues: [],
-      cascaderValue: '',
+      cascaderValue: '', // id
       // 商品集联选择器配置表
       cascaderProps: {
         value: 'cat_id',
@@ -94,7 +113,19 @@ export default {
       // 动态数据
       activeAttrForm: [],
       staticAttrForm: [],
-      activeName: 'many'
+      // activeName: 'many', // 默认是在动态数据标签
+      // 打开添加动态参数窗口
+      openActiveDialog: false,
+      // 添加动态参数
+      activeForm: {
+        attr_name: '',
+        attr_sel: 'many'
+      },
+      rules: {
+        attr_name: [
+          { required: true, message: '请输入活动名称', trigger: 'blur' }
+        ]
+      }
     }
   },
   created() {
@@ -127,7 +158,7 @@ export default {
         // 校验通过后
         // console.log(this.cascaderValue) // id
         this.btnDisabled = false // 校验完成后，该按钮应当允许按下
-        this.getGoodInfo(this.cascaderValue, this.activeName)
+        this.getGoodInfo(this.cascaderValue, this.activeForm.attr_sel)
       } else {
         this.cascaderValue = ''
         this.cascaderValues = []
@@ -168,6 +199,33 @@ export default {
     /**
      * 添加动态属性
      */
+    addActiveAttr() {
+      this.$refs.activeRuleForm.validate(valid => {
+        if (valid) {
+          this.$axios.post(`categories/${this.cascaderValue}/attributes`, this.activeForm).then(res => {
+            console.log(res)
+            if (res.data.meta.status === 201) {
+              // 上传服务器成功后
+              this.closeActiveDialog()
+              this.$message.success(res.data.meta.msg)
+              this.getGoodId()
+            } else {
+              this.$message.error(res.data.meta.msg)
+            }
+          }).catch(err => {
+            console.log(err)
+          })
+        }
+      })
+      // this.openActiveDialog = false
+    },
+    /**
+     * 关闭动态参数添加窗口
+     */
+    closeActiveDialog() {
+      this.$refs.activeRuleForm.resetFields()
+      this.openActiveDialog = false
+    },
     /**
      * 添加静态属性
      */
