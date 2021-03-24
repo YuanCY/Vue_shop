@@ -43,7 +43,10 @@
                         </el-table-column>
                         <el-table-column type="index" label="#"></el-table-column>
                         <el-table-column prop="attr_name" label="参数名称"></el-table-column>
-                        <el-table-column label="操作"></el-table-column>
+                        <el-table-column label="操作" v-slot="props">
+                          <el-button type="primary" size="mini"  icon="el-icon-edit" @click="editOpenDialog(props.row)">修改</el-button>
+                          <el-button type="danger" size="mini"  icon="el-icon-delete" @click="deleteAttr(props.row)">删除</el-button>
+                        </el-table-column>
                     </el-table>
                     <!-- ==========表格========== -->
                     <!-- ====================动态参数设置==================== -->
@@ -81,7 +84,10 @@
                             </el-table-column>
                             <el-table-column type="index" label="#"></el-table-column>
                             <el-table-column prop="attr_name" label="参数名称"></el-table-column>
-                            <el-table-column label="操作"></el-table-column>
+                            <el-table-column label="操作" v-slot="props">
+                              <el-button type="primary" size="mini"  icon="el-icon-edit" @click="editOpenDialog(props.row)">修改</el-button>
+                              <el-button type="danger" size="mini"  icon="el-icon-delete" @click="deleteAttr(props.row)">删除</el-button>
+                            </el-table-column>
                         </el-table>
                         <!-- ==========表格========== -->
                         <!-- ====================静态属性设置==================== -->
@@ -105,7 +111,26 @@
                     <el-button type="primary" @click="addActiveAttr">确 定</el-button>
                   </span>
                 </el-dialog>
-                <!-- ============================添加动态参数dialog============================ -->
+                <!-- ============================添加dialog============================ -->
+                <!-- ============================编辑dialog============================ -->
+                <el-dialog
+                  :title="'编辑' + titleName()"
+                  :visible.sync="openEditDialog"
+                  width="50%"
+                  :before-close="closeEditDialog">
+                  <!-- ====== -->
+                  <el-form :model="editForm" :rules="rules" ref="editRuleForm" label-width="100px" class="demo-ruleForm">
+                    <el-form-item :label="titleName()" prop="attr_name">
+                      <el-input v-model="editForm.attr_name"></el-input>
+                    </el-form-item>
+                  </el-form>
+                  <!-- ====== -->
+                  <span slot="footer" class="dialog-footer">
+                    <el-button @click="closeEditDialog">取 消</el-button>
+                    <el-button type="primary" @click="editAttr">确 定</el-button>
+                  </span>
+                </el-dialog>
+                <!-- ============================编辑dialog============================ -->
             </el-row>
         </div>
     </div>
@@ -138,11 +163,15 @@ export default {
       // activeName: 'many', // 默认是在动态数据标签
       // 打开添加动态参数窗口
       openActiveDialog: false,
-      // 添加动态参数
+      // 打开修改参数｜属性窗口
+      openEditDialog: false,
+      // 添加
       activeForm: {
         attr_name: '',
         attr_sel: 'many'
       },
+      // 编辑
+      editForm: {},
       rules: {
         attr_name: [
           { required: true, message: '请输入活动名称', trigger: 'blur' }
@@ -300,14 +329,84 @@ export default {
     },
     // ===========================tag相关===========================
     // ===========================添加参数相关===========================
+    /**
+     * 通过切换不同tabs面板，显示不同的title名字
+     */
     titleName() {
       if (this.activeForm.attr_sel === 'many') {
         return '动态参数'
       } else {
         return '静态属性'
       }
-    }
+    },
     // ===========================添加参数相关===========================
+    // ===========================修改属性===========================
+    /**
+     * TODO:点击获取属性信息，展示在dialog窗口
+     */
+    editOpenDialog(item) {
+      // console.log(item.attr_id) // attr_id
+      // 通过id获取数据。
+      this.$axios.get(`categories/${this.cascaderValue}/attributes/${item.attr_id}`, { attr_sel: this.activeForm.attr_sel }).then(res => {
+        if (res.data.meta.status === 200) {
+          this.editForm = res.data.data
+          this.openEditDialog = true
+        }
+      }).catch(err => {
+        console.log(err)
+      })
+    },
+    /**
+     * TODO:修改属性信息。点击确定
+     */
+    editAttr() {
+      this.$refs.editRuleForm.validate(valid => {
+        if (valid) {
+          this.$axios.put(`categories/${this.cascaderValue}/attributes/${this.editForm.attr_id}`, this.editForm).then(res => {
+            this.closeEditDialog()
+            this.$message.success(res.data.meta.msg)
+            this.getGoodId()
+          }).catch(err => {
+            console.log(err)
+          })
+        }
+      })
+    },
+    /**
+     * TODO:关闭编辑dialog
+     */
+    closeEditDialog() {
+      this.$refs.editRuleForm.resetFields()
+      this.openEditDialog = false
+    },
+    // ===========================修改属性===========================
+    // ===========================删除属性===========================
+    deleteAttr(item) {
+      this.$confirm('此操作将永久删除该文件, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        this.$axios.delete(`categories/${this.cascaderValue}/attributes/${item.attr_id}`).then(res => {
+          console.log(res)
+          if (res.data.meta.status === 200) {
+            this.getGoodId()
+            this.$message({
+              type: 'success',
+              message: '删除成功!'
+            })
+          }
+        }).catch(err => {
+          console.log(err)
+        })
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消删除'
+        })
+      })
+    }
+    // ===========================删除属性===========================
 
   }
 }
