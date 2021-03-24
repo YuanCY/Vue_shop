@@ -50,11 +50,33 @@
                     </el-tab-pane>
                     <el-tab-pane label="静态属性" name="only">
                         <!-- ====================静态属性设置==================== -->
-                        <el-button type="primary" size="small" :disabled="btnDisabled">添加属性</el-button>
+                        <el-button type="primary" size="small" :disabled="btnDisabled" @click="openActiveDialog = true">添加属性</el-button>
                         <!-- ==========表格========== -->
                         <el-table :data="staticAttrForm" border style="width: 100%">
-                            <el-table-column type="expand">
+                            <el-table-column type="expand" v-slot="item">
                                 <el-form label-position="left" inline>
+                                  <!-- ================================== -->
+                                  <el-form-item>
+                                    <el-tag
+                                    :key="index"
+                                    v-for="(tag,index) in item.row.attr_vals"
+                                    closable
+                                    :disable-transitions="false"
+                                    @close="deleteTag(tag, item.row)">
+                                    {{tag}}
+                                    </el-tag>
+                                    <el-input
+                                    class="input-new-tag"
+                                    v-if="item.row.inputTagVisible"
+                                    v-model="item.row.inputValue"
+                                    ref="saveTagInput"
+                                    size="small"
+                                    @keyup.enter.native="addTag(item.row)"
+                                    @blur="addTag(item.row)"
+                                    ></el-input>
+                                    <el-button v-else class="button-new-tag" size="small" @click="showInput(item.row)">+ New Tag</el-button>
+                                </el-form-item>
+                                  <!-- ================================== -->
                                 </el-form>
                             </el-table-column>
                             <el-table-column type="index" label="#"></el-table-column>
@@ -67,13 +89,13 @@
                 </el-tabs>
                 <!-- ============================添加动态参数dialog============================ -->
                 <el-dialog
-                  title="添加动态参数"
+                  :title="'添加' + titleName()"
                   :visible.sync="openActiveDialog"
                   width="50%"
                   :before-close="closeActiveDialog">
                   <!-- ====== -->
                   <el-form :model="activeForm" :rules="rules" ref="activeRuleForm" label-width="100px" class="demo-ruleForm">
-                    <el-form-item label="动态参数" prop="attr_name">
+                    <el-form-item :label="titleName()" prop="attr_name">
                       <el-input v-model="activeForm.attr_name"></el-input>
                     </el-form-item>
                   </el-form>
@@ -203,7 +225,6 @@ export default {
       this.$refs.activeRuleForm.validate(valid => {
         if (valid) {
           this.$axios.post(`categories/${this.cascaderValue}/attributes`, this.activeForm).then(res => {
-            console.log(res)
             if (res.data.meta.status === 201) {
               // 上传服务器成功后
               this.closeActiveDialog()
@@ -265,7 +286,6 @@ export default {
      * 删除tag
      */
     deleteTag(tag, item) {
-      console.log(item)
       item.attr_vals.splice(item.attr_vals.indexOf(tag), 1)
       this.saveAttr(item)
     },
@@ -277,8 +297,18 @@ export default {
       this.$nextTick(_ => {
         this.$refs.saveTagInput.$refs.input.focus()
       })
-    }
+    },
     // ===========================tag相关===========================
+    // ===========================添加参数相关===========================
+    titleName() {
+      if (this.activeForm.attr_sel === 'many') {
+        return '动态参数'
+      } else {
+        return '静态属性'
+      }
+    }
+    // ===========================添加参数相关===========================
+
   }
 }
 </script>
