@@ -342,7 +342,7 @@ export default {
     // ===========================添加参数相关===========================
     // ===========================修改属性===========================
     /**
-     * TODO:点击获取属性信息，展示在dialog窗口
+     * 点击获取属性信息，展示在dialog窗口
      */
     editOpenDialog(item) {
       // console.log(item.attr_id) // attr_id
@@ -357,7 +357,7 @@ export default {
       })
     },
     /**
-     * TODO:修改属性信息。点击确定
+     * 修改属性信息。点击确定
      */
     editAttr() {
       this.$refs.editRuleForm.validate(valid => {
@@ -373,7 +373,7 @@ export default {
       })
     },
     /**
-     * TODO:关闭编辑dialog
+     * 关闭编辑dialog
      */
     closeEditDialog() {
       this.$refs.editRuleForm.resetFields()
