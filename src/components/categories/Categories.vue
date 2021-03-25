@@ -20,7 +20,10 @@
                         <i :class="item.row.cat_deleted ? 'el-icon-error' : 'el-icon-success'" :style="item.row.cat_deleted ? 'color: #e47470':'color: #6aca51'"></i>
                     </el-table-column>
                     <el-table-column label="排序" v-slot="item">
-                        <el-tag :type="goodLevel[item.row.cat_level].tagType" size="mini" effect="dark">{{ goodLevel[item.row.cat_level].tagName }}</el-tag>
+                        <!-- <el-tag :type="goodLevel[item.row.cat_level].tagType" size="mini" effect="dark">{{ goodLevel[item.row.cat_level].tagName }}</el-tag> -->
+                        <el-tag size="mini" effect="dark" v-if="item.row.cat_level === 0">一级</el-tag>
+                        <el-tag type="success" size="mini" effect="dark" v-else-if="item.row.cat_level === 1">二级</el-tag>
+                        <el-tag type="warning" size="mini" effect="dark" v-else>三级</el-tag>
                     </el-table-column>
                     <el-table-column label="操作" width="180" v-slot="props">
                         <el-button type="primary" size="mini" icon="el-icon-edit" @click="openEditDialog(props.row)">编辑</el-button>
@@ -156,6 +159,7 @@ export default {
     getGoodForm() {
       this.$axios.get('categories', { params: this.getGoodConfig }).then(res => {
         if (res.data.meta.status === 200) {
+          console.log(res)
           this.goodsForm = res.data.data.result
           this.total = res.data.data.total
         //   console.log(res.data.data)
