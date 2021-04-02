@@ -53,9 +53,29 @@
                                 <!-- -------基本信息------- -->
                                 <el-button type="primary" @click="nextStep">下一步</el-button>
                             </el-tab-pane>
-                            <el-tab-pane label="商品参数">商品参数</el-tab-pane>
+                            <el-tab-pane label="商品参数">
+                                <el-form-item :label="item.attr_name" v-for="(item) in goodCatMany" :key="item.attr_id">
+                                    <el-checkbox-group v-model="item.attr_vals" size="small">
+                                        <el-checkbox :label="subItem" border v-for="(subItem,index) in item.attr_checklist" :key="index"></el-checkbox>
+                                    </el-checkbox-group>
+                                </el-form-item>
+                                <el-button type="primary" @click="nextStep">下一步</el-button>
+                            </el-tab-pane>
                             <el-tab-pane label="商品属性">商品属性</el-tab-pane>
-                            <el-tab-pane label="商品图片">商品图片</el-tab-pane>
+                            <el-tab-pane label="商品图片">
+                                <el-upload
+                                :action="uploadUrl"
+                                list-type="picture-card"
+                                :on-success="uploadPicture"
+                                :on-preview="handlePictureCardPreview"
+                                :on-remove="handleRemove"
+                                :headers="headersObj">
+                                <i class="el-icon-plus"></i>
+                                </el-upload>
+                                <el-dialog :visible.sync="dialogVisible">
+                                <img width="100%" :src="dialogImageUrl" alt="">
+                                </el-dialog>
+                            </el-tab-pane>
                             <el-tab-pane label="商品内容">商品内容</el-tab-pane>
                     </el-tabs>
                 </el-form>
@@ -75,11 +95,12 @@ export default {
       tabsValue: '', // tabs栏的值
       // 添加商品相关变量---------------------------
       goodInfo: {
-        goods_name: '',
+        goods_name: '荣耀',
         goods_price: 0,
         goods_weight: 0,
         goods_number: 0,
-        goods_cat: []
+        goods_cat: [],
+        pics: []
       },
       goodRules: {
         goods_name: [
@@ -108,9 +129,22 @@ export default {
         label: 'cat_name',
         children: 'children'
       },
-      goodInfoCatLength: 0 // 数组长度
+      goodCatId: '', // 储存选中类型的id
+      goodInfoCatLength: 0, // 数组长度
       // 添加商品相关变量---------------------------
-
+      // 获取参数、属性-------------
+      goodCatMany: [],
+      goodCatOnly: [],
+      // 添加图片上传地址
+      uploadUrl: 'https://www.liulongbin.top:8888/api/private/v1/upload',
+      // 添加图片相关属性
+      dialogVisible: false,
+      dialogImageUrl: '',
+      // 由于element-ui的upload使用的不是我们的axios发起的请求，所以不带token，导致上传失败
+      // 所以我们用element-ui的属性header传入
+      headersObj: {
+        Authorization: window.sessionStorage.getItem('token')
+      }
     }
   },
   created() {
@@ -147,14 +181,20 @@ export default {
         // 设置
         this.$refs.goodInfoRuleForm.validate(valid => {
           if (valid) {
-            console.log('校验完成')
-            this.tabsValue = '1'
-            this.active = parseInt(this.tabsValue)
+            this.active = 1
+            // this.tabsClick()
           } else {
             this.$message.warning('表格填写错误')
           }
         })
+      } else if (this.active === 1) {
+        // 在动态属性界面
+        this.active = 2
+      } else if (this.active === 3) {
+        // 在图片界面
       }
+      this.tabsValue = this.active.toString()
+      this.tabsClick()
     },
     /**
      * 点击获取数据，驱动获取数据
@@ -163,8 +203,10 @@ export default {
       console.log(this.tabsValue)
       if (this.tabsValue === '1') {
         console.log('商品参数')
+        this.getGoodAttr('many')
       } else if (this.tabsValue === '2') {
         console.log('商品属性')
+        this.getGoodAttr('only')
       } else if (this.tabsValue === '3') {
         console.log('商品图片')
       } else if (this.tabsValue === '4') {
@@ -176,13 +218,77 @@ export default {
      */
     changeGoodCat() {
       if (this.goodInfo.goods_cat.length === 3) {
-        this.goodInfoCatLength = this.goodInfo.goods_cat.length
+        this.goodCatId = this.goodInfo.goods_cat[2]
+        this.goodInfoCatLength = this.goodInfo.goods_cat.length // 将数组长度存储
         this.goodInfo.goods_cat = this.goodInfo.goods_cat.join(',')
         return this.goodInfo.goods_cat
       } else {
         this.$message.warning('只能选择三级商品分类！')
         this.goodInfo.goods_cat = []
       }
+    },
+    /**
+     * 获取商品的动态｜静态属性
+     */
+    getGoodAttr(catSel) {
+      if (catSel === 'only' || catSel === 'many') {
+        this.$axios.get(`categories/${this.goodCatId}/attributes`, { params: { sel: catSel } }).then(res => {
+          if (res.data.meta.status === 200) {
+            res.data.data.forEach(item => {
+              item.attr_vals = item.attr_vals === '' ? [] : item.attr_vals.split(',')
+            //   console.log(item)
+            })
+            if (catSel === 'many') {
+              this.goodCatMany = res.data.data
+              // console.log(typeof (this.goodCatMany)) // object
+              this.goodCatMany.forEach(item => {
+                item.attr_checklist = item.attr_vals
+              })
+            } else if (catSel === 'only') {
+              this.goodCatOnly = res.data.data
+              console.log(this.goodCatOnly)
+            }
+          }
+        }).catch(err => {
+          console.log(err)
+        })
+      }
+    },
+    /**
+     * 图片预览
+     */
+    handlePictureCardPreview() {
+      this.dialogVisible = true
+    },
+    uploadPicture(res) {
+      console.log(res)
+      if (res.meta.status === 200) {
+        this.$message.success(res.meta.msg)
+        this.dialogImageUrl = res.data.url
+        // pics是个数组，数组中接收的是对象。
+        // 1、先拼凑出对象，然后push进pics
+        const picInfo = { pic: res.data.tmp_path }
+        this.goodInfo.pics.push(picInfo)
+      } else {
+        this.$message.error(res.meta.msg)
+      }
+    },
+    /**
+     * 关闭remove
+     */
+    handleRemove(file) {
+      /**
+       * 1、获取将要删除的图片的临时路径。
+       * 2、从pics中找到索引，然后splice方法删除
+       */
+      // console.log(file)
+      // console.log(file.response.data.tmp_path)
+      const fileTmpPath = file.response.data.tmp_path
+      // 使用findindex的回调函数属性，获取每一个pics中的
+      const index = this.goodInfo.pics.findIndex(item => item.pic === fileTmpPath)
+      // console.log(index)
+      this.goodInfo.pics.splice(index, 1)
+    //   console.log(this.goodInfo.pics)
     }
   }
 
