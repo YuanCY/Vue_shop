@@ -8,8 +8,11 @@ import './assets/css/global.css'
 import './assets/fonts/iconfont.css'
 // 导入axios
 import axios from 'axios'
+// import echarts from 'echarts'
+// import * as echarts from 'echarts'
 
 Vue.prototype.$axios = axios // 挂载原型
+// Vue.prototype.$echarts = echarts // 挂载原型
 axios.defaults.baseURL = 'https://www.liulongbin.top:8888/api/private/v1/'
 axios.interceptors.request.use(config => {
   // 为请求头对象，添加token验证的Authorization字段
